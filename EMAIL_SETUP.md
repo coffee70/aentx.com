@@ -1,57 +1,85 @@
-# Email Setup Guide for Contact Form
+# Email Setup Guide for Contact Form using Resend
 
-## Gmail Configuration Steps
+## Resend Configuration Steps
 
-### 1. Enable 2-Factor Authentication
-- Go to your Google Account settings: https://myaccount.google.com/
-- Navigate to **Security** → **2-Step Verification**
-- Follow the setup process if not already enabled
+### 1. Create Resend Account
+- Go to https://resend.com
+- Sign up for a free account (generous free tier available)
+- Verify your account
 
-### 2. Generate App Password
-- In Google Account settings, go to **Security** → **2-Step Verification**
-- Scroll down to **App passwords**
-- Select app: **Mail**
-- Select device: **Other (custom name)** → enter "AENTX Contact Form"
-- Copy the 16-character app password (save this securely!)
+### 2. Get API Key
+- In your Resend dashboard, go to **API Keys**
+- Click **Create API Key**
+- Give it a name like "AENTX Contact Form"
+- Select **Full access** permissions
+- Copy the API key (starts with `re_`) and save it securely
 
-### 3. Update Environment Variables
+### 3. Set Up Domain (Optional for Testing)
+For testing, you can use Resend's default domain `onboarding@resend.dev`.
+
+For production:
+- In Resend dashboard, go to **Domains**
+- Add your domain (e.g., `yourdomain.com`)
+- Follow DNS verification steps
+- Use emails like `noreply@yourdomain.com` as your FROM address
+
+### 4. Update Environment Variables
 Edit your `.env` file and replace the placeholder values:
 
 ```env
-# Your Gmail email address (both sender and recipient)
-GMAIL_USER=your-actual-email@gmail.com
+# Resend API Key (get from https://resend.com/api-keys)
+RESEND_API_KEY=re_your_actual_api_key_here
 
-# Gmail App Password (the 16-character password from step 2)
-GMAIL_APP_PASSWORD=your-actual-app-password
+# From email address (must be verified domain with Resend)
+# For testing: onboarding@resend.dev
+# For production: noreply@yourdomain.com
+FROM_EMAIL=onboarding@resend.dev
 
-# Gmail SMTP Configuration (keep these as-is)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+# Email address to receive contact form submissions (your personal email)
+TO_EMAIL=your-actual-email@gmail.com
 
 # Application URL (update for production)
 APP_URL=http://localhost:3000
 ```
 
-### 4. Security Notes
+### 5. Security Notes
 - **Never commit your `.env` file** to version control
 - The `.env.example` file shows the structure but contains placeholder values
-- App passwords are more secure than using your regular Gmail password
-- Emails will be sent FROM your Gmail TO your Gmail (you're both sender and recipient)
+- API keys are more secure than SMTP credentials
+- Resend provides excellent deliverability and analytics
 
-### 5. Testing
+### 6. Testing
 - Fill out your contact form to test the email functionality
-- Check your Gmail inbox for the formatted email
+- Check your email inbox for the formatted email
 - Check server logs for success/error messages
+- Monitor your Resend dashboard for email analytics
 
-### 6. Production Deployment
+### 7. Production Deployment
 When deploying to production:
+- Set up your own verified domain in Resend
+- Update `FROM_EMAIL` to use your domain
 - Update `APP_URL` to your production domain
 - Set environment variables in your hosting platform
-- Consider using a dedicated business email for production
+- Monitor email delivery in Resend dashboard
+
+## Advantages of Resend
+- **Better deliverability** than SMTP
+- **Built-in analytics** and delivery tracking
+- **API-based** - more reliable than SMTP
+- **Generous free tier** - 3,000 emails/month free
+- **Easy setup** - no complex SMTP configuration
+- **Modern developer experience**
 
 ## Email Format
 The emails you receive will include:
 - Contact person's information (name, email, company)
 - Their message
 - Submission timestamp
-- Reply-to address set to the contact person's email for easy responses 
+- Reply-to address set to the contact person's email for easy responses
+- Professional HTML formatting with AENTX branding
+
+## Troubleshooting
+- **API Key Issues**: Make sure your API key starts with `re_` and has full access
+- **Domain Issues**: For production, ensure your domain is verified in Resend
+- **Rate Limits**: Free tier allows 3,000 emails/month, 100 emails/day
+- **Check Logs**: Server logs will show detailed error messages 

@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // Define validation schema for contact form
 const contactFormSchema = z.object({
@@ -43,7 +43,7 @@ interface FormState {
   message?: string;
 }
 
-// Email sending function
+// Email sending function using Resend
 async function sendContactEmail(data: {
   firstName: string;
   lastName: string;
@@ -51,19 +51,8 @@ async function sendContactEmail(data: {
   company: string;
   message: string;
 }) {
-  // Create transporter with Gmail SMTP
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  });
-
-  // Verify transporter configuration
-  await transporter.verify();
+  // Initialize Resend with API key
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   // Email content
   const emailHtml = `
@@ -107,17 +96,21 @@ Submission Date: ${new Date().toLocaleString()}
 Source: AENTX Contact Form
   `;
 
-  // Send email
-  const info = await transporter.sendMail({
-    from: `"AENTX Contact Form" <${process.env.GMAIL_USER}>`,
-    to: process.env.GMAIL_USER, // Send to yourself
+  // Send email using Resend
+  const result = await resend.emails.send({
+    from: `AENTX Contact Form <${process.env.FROM_EMAIL}>`,
+    to: process.env.TO_EMAIL!,
     subject: `New Contact: ${data.firstName} ${data.lastName} from ${data.company}`,
     text: emailText,
     html: emailHtml,
     replyTo: data.email, // Allow easy reply to the person who submitted
   });
 
-  return info.messageId;
+  if (result.error) {
+    throw new Error(`Resend API error: ${result.error.message}`);
+  }
+
+  return result.data?.id;
 }
 
 export async function submitContactForm(
